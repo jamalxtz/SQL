@@ -1,0 +1,8 @@
+CASE WHEN (Entradas.TotaisFrete) <> 0 THEN TotaisFrete ELSE (SELECT SUM(ValorFrete)
+		FROM EntradasProdutos WHERE CodigoEntrada = Entradas.Codigo) END TotaisFrete,
+
+		CASE WHEN (Entradas.TotaisSeguro) <> 0 THEN TotaisSeguro ELSE (SELECT SUM(ValorSeguro)
+		FROM EntradasProdutos WHERE CodigoEntrada = Entradas.Codigo) END TotaisSeguro,
+
+		CASE WHEN (Entradas.TotaisDespesas) <> 0 THEN TotaisDespesas ELSE (SELECT SUM(ValorDespesas)
+		FROM EntradasProdutos WHERE CodigoEntrada = Entradas.Codigo) END TotaisDespesas,

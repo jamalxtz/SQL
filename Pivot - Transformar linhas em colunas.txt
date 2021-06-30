@@ -1,0 +1,84 @@
+Pivot SQL
+
+ref:
+http://www.dbins.com.br/dica/convertendo-linhas-em-colunas-no-sql-server-usando-pivot
+
+select * from (
+select DEPARTAMENTO, VALOR 
+FROM minha_tabela 
+where month(data) = 1 and year(data) = 2017 
+) DataTable 
+PIVOT 
+(
+COUNT (VALOR) 
+FOR DEPARTAMENTO 
+IN ([COMPRAS], [MKT]) 
+) PivotTable 
+
+
+
+EXEMPLO PRÁTICO
+
+SELECT * FROM( 
+SELECT
+ SUB.Origem AS Origem,
+ SUM(SUB.Quantidade) as Total 
+FROM ( 
+   SELECT Entradas.Codigo, 
+       ('ENTRADA')AS Origem , 
+       Entradas.Data, 
+       (Entradas.CodigoSituacaoGerencial + ' ' + TABSituacoesGerenciais.Descricao)AS SituacaoGerencial, 
+       (Convert(varchar(80),Fornecedores.Codigo) + ' ' + Fornecedores.ApelidoFantasia)AS Entidade , 
+       EntradasProdutos.Quantidade 
+   FROM (((EntradasProdutos INNER JOIN Entradas ON EntradasProdutos.CodigoEntrada = Entradas.Codigo) LEFT JOIN TABSituacoesGerenciais ON Entradas.CodigoSituacaoGerencial = TABSituacoesGerenciais.Codigo) INNER JOIN Fornecedores ON Entradas.CodigoFornecedor = Fornecedores.Codigo) 
+   WHERE Entradas.Cancelado = 'NÃO' AND 
+       EntradasProdutos.CodigoProduto = 21 AND 
+       EntradasProdutos.CodigoCor = 0 AND 
+       EntradasProdutos.CodigoTamanho = 0 AND 
+       Convert(varchar(80),EntradasProdutos.Lote) = 'XX342543'  
+   UNION ALL 
+   SELECT Producoes.Codigo, 
+       ('ENTRADA')AS Origem, 
+       Producoes.Data, 
+       (Producoes.CodigoSituacaoGerencial + ' ' + TABSituacoesGerenciais.Descricao)AS SituacaoGerencial, 
+       '' AS Entidade, 
+       ProducoesProdutos.Quantidade 
+   FROM ((ProducoesProdutos INNER JOIN Producoes ON ProducoesProdutos.CodigoProducao = Producoes.Codigo) LEFT JOIN TABSituacoesGerenciais ON Producoes.CodigoSituacaoGerencial = TABSituacoesGerenciais.Codigo)
+   WHERE Producoes.Cancelado = 'NÃO' AND 
+       ProducoesProdutos.CodigoProduto = 21 AND 
+       ProducoesProdutos.CodigoCor = 0 AND 
+       ProducoesProdutos.CodigoTamanho = 0 AND 
+       Convert(varchar(80),ProducoesProdutos.Lote) = 'XX342543' 
+   UNION ALL 
+   SELECT Saidas.Codigo, 
+       ('SAÍDA')AS Origem, 
+       Saidas.Data, 
+       (Saidas.CodigoSituacaoGerencial + ' ' + TABSituacoesGerenciais.Descricao)AS SituacaoGerencial, 
+       (Convert(varchar(80),Clientes.Codigo) + ' ' + Clientes.ApelidoFantasia)AS Entidade, 
+       SaidasProdutos.Quantidade 
+   FROM (((SaidasProdutos INNER JOIN Saidas ON SaidasProdutos.CodigoSaida = Saidas.Codigo) LEFT JOIN TABSituacoesGerenciais ON Saidas.CodigoSituacaoGerencial = TABSituacoesGerenciais.Codigo) INNER JOIN Clientes ON Saidas.CodigoCliente = Clientes.Codigo ) 
+   WHERE Saidas.Cancelado = 'NÃO' AND 
+       SaidasProdutos.CodigoProduto = 21 AND 
+       SaidasProdutos.CodigoCor = 0 AND 
+       SaidasProdutos.CodigoTamanho = 0 AND 
+       Convert(varchar(80),SaidasProdutos.Lote) = 'XX342543'
+   UNION ALL 
+   SELECT Producoes.Codigo, 
+       ('ENTRADA')AS Origem, 
+       Producoes.Data, 
+       (Producoes.CodigoSituacaoGerencial + ' ' + TABSituacoesGerenciais.Descricao)AS SituacaoGerencial, 
+       '' AS Entidade, ProducoesProdutosProdutos.Quantidade
+   FROM ((ProducoesProdutosProdutos INNER JOIN Producoes ON ProducoesProdutosProdutos.CodigoProducao = Producoes.Codigo) LEFT JOIN TABSituacoesGerenciais ON Producoes.CodigoSituacaoGerencial = TABSituacoesGerenciais.Codigo) 
+   WHERE Producoes.Cancelado = 'NÃO' AND 
+       ProducoesProdutosProdutos.CodigoProduto = 21 AND 
+       ProducoesProdutosProdutos.CodigoCor = 0 AND 
+       ProducoesProdutosProdutos.CodigoTamanho = 0 AND 
+       Convert(varchar(80),ProducoesProdutosProdutos.Lote) = 'XX342543'
+)AS SUB
+ GROUP BY Origem )DataTable 
+PIVOT 
+(
+SUM(Total)
+FOR Origem 
+IN ([ENTRADA], [SAÍDA]) 
+)PivotTable

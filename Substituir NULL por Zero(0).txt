@@ -1,0 +1,1 @@
+SELECT ISNULL(myColumn, 0 ) FROM myTable

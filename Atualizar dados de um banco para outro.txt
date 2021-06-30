@@ -1,0 +1,44 @@
+--SCRIPT 1
+-- ATUALIZA O ESTOQUE DO SAGE POR LOJA BUSCANDO A INFORMAÇÃO NO BANCO DE DADOS SIC NA GRADE DE ESTOQUE
+-- ANTES DE RODAR O UPDATE TROCAR O NOME DO BANCO DE ORIGEM E DESTINO E TAMBEM SEPARAR A LJ1 DA LJ2
+-- LJ1 = BUENO
+-- LJ2 = LC
+-- OBS: ALTERAR SOMENTE O NOME DOS BANCOS E O NOME DAS LOJAS, OS FILTROS ABAIXO NÃO ESTÃO IMPORTANTO PRODUTOS DO ANTIGO SISTEMA
+-- QUE TEM O CÓDIGO COM MAIS DE 8 DIGITOS E COM CARACTERES NÃO NUMÉRICOS
+
+UPDATE NOME_BANCO_SAGE.dbo.ProdutosItens
+SET
+  EstoqueInterno = saldo
+FROM 
+		(SELECT 
+			Pro_codigo,   
+			Loja, 
+			SUM(Gra_saldo) AS saldo
+		FROM      NOME_BANCO_ANTIGO_SISTEMA.dbo.Gradepro
+		WHERE     
+			NOME_BANCO_ANTIGO_SISTEMA.dbo.Gradepro.Loja = 'LJ1'
+		GROUP BY Loja, Pro_codigo) as SUB
+
+WHERE NOME_BANCO_SAGE.dbo.ProdutosItens.CodigoProduto = Pro_codigo
+AND Loja = 'LJ1'
+AND LEN(Pro_codigo) < 8
+AND ISNUMERIC(Pro_codigo) = 1
+
+============================================================================================================
+
+-- SCRIPT 2
+-- ATUALIZA O ESTOQUE BAIXANDO AS SAIDAS JA REALIZADAS
+UPDATE ProdutosItens
+SET
+  EstoqueInterno = EstoqueInterno - qtdeSaidas
+FROM 
+		(SELECT 
+			CodigoProduto,   
+			SUM(Quantidade) AS qtdeSaidas
+		FROM      SaidasProdutos
+		INNER JOIN SAIDAS ON SAIDAS.CODIGO = SaidasProdutos. CodigoSaida
+		WHERE SAIDAS.TIPO <> 'OUTRAS' AND
+		SAIDAS.Cancelado = 'NÃO'
+		GROUP BY CodigoProduto
+		) as SUB
+WHERE ProdutosItens.CodigoProduto = SUB.CodigoProduto

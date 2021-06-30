@@ -1,0 +1,15 @@
+DECLARE @temp TABLE
+(
+    string NVARCHAR(50)
+)
+
+INSERT INTO @temp (string)
+VALUES 
+    ('003Preliminary Examination Plan'),
+    ('Coordination005'),
+    ('Balance1000sheet')
+-- Utilizo essa SUBSTRING para trazer apenas os numeros de um determinado campo, utilizei ela tambem no where para pesquisar apenas os numeros inteiros
+SELECT SUBSTRING(string, PATINDEX('%[0-9]%', string), PATINDEX('%[0-9][^0-
+9]%', string + 't') - PATINDEX('%[0-9]%', 
+                    string) + 1) AS Number
+FROM @temp
